@@ -3,10 +3,11 @@ import datetime
 import flask as flk
 
 from .utils.game_options import GameOptions
-
 from .game import create_game
 
-from .utils.parse import parse_int
+
+__all__ = ["create_app"]
+
 
 def create_app() -> flk.Flask:
     app = flk.Flask(__name__)

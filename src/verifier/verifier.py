@@ -2,6 +2,9 @@ from ..utils.game_options import GameOptions
 from .algorithm import verify_feasibility
 
 
+__all__ = ["is_feasible_game"]
+
+
 def is_feasible_game(
     numbers: list[int],
     target: int,
