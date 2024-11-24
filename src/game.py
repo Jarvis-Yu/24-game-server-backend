@@ -1,7 +1,7 @@
 import random
 import time
 
-from .verifier.verifier import is_feasible_game
+from .solver.solver import find_one_solution
 
 from .utils.game_options import GameOptions
 from .utils.types import number
@@ -27,7 +27,7 @@ def create_game(
     start_time = time.time()
     while True:
         numbers = [randomizer.randint(1, 10) for _ in range(quantity)]
-        if is_feasible_game(numbers, target, options):
+        if find_one_solution(numbers, target, options) is not None:
             return numbers, time.time() - start_time
         if timeout is not None and time.time() - start_time > timeout:
             raise TimeoutError("Timeout reached")

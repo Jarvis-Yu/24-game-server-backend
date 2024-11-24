@@ -51,6 +51,9 @@ class Expression(ABC):
     ) -> str:
         pass
 
+    def __str__(self) -> str:
+        return self.to_string()
+
 
 @dataclass(frozen=True)
 class BiOpExpression(Expression):
