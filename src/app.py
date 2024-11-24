@@ -6,8 +6,9 @@ from dataclasses import dataclass
 import flask as flk
 
 from .utils.cipher import get_encryptor_decryptor
+from .utils.expression import Expression
 from .utils.game_options import GameOptions
-from .game import create_game
+from .game import check_game, create_game
 
 
 __all__ = ["create_app"]
@@ -17,6 +18,7 @@ __all__ = ["create_app"]
 class _Route:
     classic_24 = "/api/classic/24"
     classic_48 = "/api/classic/48"
+    query_classic = "/api/query/classic/<int:target>/<path:numbers_in_path>"
     game_of_the_day = "/api/today"
     solution = "/api/solution/<encoded_solution>"
 
@@ -45,12 +47,6 @@ class _App:
         def quick_classic_48_game():
             return self.create_game(flk.request, 5, 48)
 
-        @app.route(self.ROUTES.solution, methods=["GET", "POST"])
-        def decode(encoded_solution: str):
-            return {
-                "solution": self.decrypt(encoded_solution),
-            }
-
         @app.route(self.ROUTES.game_of_the_day, methods=["GET", "POST"])
         def game_of_the_day():
             seed = datetime.date.today().isoformat() + self.SALT_TODAY
@@ -61,27 +57,54 @@ class _App:
                 "time_taken": time_taken,
             }
 
+        @app.route(self.ROUTES.query_classic, methods=["GET", "POST"])
+        def query_classic_game(target: int, numbers_in_path: str):
+            numbers = [int(number) for number in numbers_in_path[:-1].split("/")]
+            int_solution, int_time_taken = check_game(numbers, target, GameOptions())
+            float_solution, float_time_taken = check_game(numbers, target, GameOptions(integer_only=False))
+            integer_feasible = int_solution is not None
+            return {
+                "numbers": numbers,
+                "target": target,
+                "integer_feasible": integer_feasible,
+                "solution": self.get_solution_link(flk.request, int_solution if integer_feasible else float_solution),
+                "time_taken": int_time_taken + float_time_taken,
+            }
+
+        @app.route(self.ROUTES.solution, methods=["GET", "POST"])
+        def decode(encoded_solution: str):
+            return {
+                "solution": self.decrypt(encoded_solution),
+            }
+
         @app.errorhandler(404)
         def page_not_found(error):
+            url = flk.request.url
             return {
                 "error": "Page not found",
                 "help": {
-                    self.ROUTES.classic_24: "Get a classic 24 game",
-                    self.ROUTES.classic_48: "Get a classic 48 game",
-                    self.ROUTES.game_of_the_day: "Get a game of the day",
+                    url + self.ROUTES.classic_24: "Get a classic 24 game",
+                    url + self.ROUTES.classic_48: "Get a classic 48 game",
+                    url + self.ROUTES.game_of_the_day: "Get a game of the day",
+                    url + self.ROUTES.query_classic: "Query a classic game",
                 },
             }, 404
 
-    def create_game(self, request: flk.Request, numbers: int, target: int) -> dict:
+    def create_game(self, request: flk.Request, quantity: int, target: int) -> dict:
         options = GameOptions.parse_from_dict(request.values)
-        numbers, solution, time_taken = create_game(numbers, target, options)
+        numbers, solution, time_taken = create_game(quantity, target, options)
         return {
             "numbers": numbers,
             "target": target,
-            "solution": request.url_root + "api/solution/" + self.encrypt(solution.to_string()),
+            "solution": self.get_solution_link(request, solution),
             "time_taken": time_taken,
             "options": options.to_dict(),
         }
+
+    def get_solution_link(self, request: flk.Request, solution: Expression | None) -> str:
+        if solution is None:
+            return "None"
+        return request.url_root + "api/solution/" + self.encrypt(solution.to_string())
 
     @classmethod
     def init_app(cls, app: flk.Flask) -> None:

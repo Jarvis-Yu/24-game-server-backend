@@ -7,7 +7,7 @@ from .utils.game_options import GameOptions
 from .utils.types import number
 
 
-__all__ = ["create_game"]
+__all__ = ["check_game", "create_game"]
 
 
 def _get_random(seed: int | float | str | None) -> random.Random:
@@ -31,3 +31,11 @@ def create_game(
             return numbers, solution, time.time() - start_time
         if timeout is not None and time.time() - start_time > timeout:
             raise TimeoutError("Timeout reached")
+
+def check_game(
+        numbers: list[int],
+        target: int,
+        options: GameOptions,
+) -> tuple[Expression | None, number]:
+    start_time = time.time()
+    return find_one_solution(numbers, target, options), time.time() - start_time
