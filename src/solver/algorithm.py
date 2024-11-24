@@ -153,9 +153,7 @@ if __name__ == "__main__":
     assert find_solution_for_target([1, 7, 13, 37], 1, default_options) is None
     assert find_solution_for_target([1, 7, 13, 37], 1, GameOptions(must_use_all=False)) is not None
 
-    print(find_solution_for_target([1, 3, 4, 6], 24, float_allowed_options))
-    print(find_solution_for_target([1, 4, 7, 9], 24, default_options))
-    results = all_results([1, 3, 4, 6], default_options)
-    for result in sorted(list(results.keys())):
-        print(f"{result}: {results[result]}")
+    # results = all_results([3, 3, 8, 8], default_options)
+    # for result in sorted(list(results.keys())):
+    #     print(f"{result}: {results[result]}")
     

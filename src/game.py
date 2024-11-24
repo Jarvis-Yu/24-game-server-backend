@@ -2,7 +2,7 @@ import random
 import time
 
 from .solver.solver import find_one_solution
-
+from .utils.expression import Expression
 from .utils.game_options import GameOptions
 from .utils.types import number
 
@@ -22,12 +22,12 @@ def create_game(
         options: GameOptions,
         seed: number | str | None = None,
         timeout: number | None = None,
-) -> tuple[list[int], number]:
+) -> tuple[list[int], Expression, number]:
     randomizer = _get_random(seed)
     start_time = time.time()
     while True:
         numbers = [randomizer.randint(1, 10) for _ in range(quantity)]
-        if find_one_solution(numbers, target, options) is not None:
-            return numbers, time.time() - start_time
+        if (solution := find_one_solution(numbers, target, options)) is not None:
+            return numbers, solution, time.time() - start_time
         if timeout is not None and time.time() - start_time > timeout:
             raise TimeoutError("Timeout reached")
