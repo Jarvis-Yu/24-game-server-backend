@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import flask as flk
 
-from .utils.parse import parse_int
+from .utils.parse import parse_int, parse_to_bool_dict
 
 from .utils.cipher import get_encryptor_decryptor
 from .utils.expression import Expression
@@ -52,7 +52,7 @@ class _App:
         @app.route(self.ROUTES.game_of_the_day, methods=["GET", "POST"])
         def game_of_the_day():
             seed = datetime.date.today().isoformat() + self.SALT_TODAY
-            options = GameOptions(integer_only=False)
+            options = GameOptions(integer_solvable=False)
             numbers, solution, time_taken = create_game(4, 24, options, seed)
             return {
                 "numbers": numbers,
@@ -67,7 +67,7 @@ class _App:
                 if (number := parse_int(number_str)) is not None
             ]
             int_solution, int_time_taken = check_game(numbers, target, GameOptions())
-            float_solution, float_time_taken = check_game(numbers, target, GameOptions(integer_only=False))
+            float_solution, float_time_taken = check_game(numbers, target, GameOptions(integer_solvable=False))
             integer_feasible = int_solution is not None
             return {
                 "numbers": numbers,
@@ -97,7 +97,13 @@ class _App:
             }, 404
 
     def create_game(self, request: flk.Request, quantity: int, target: int) -> dict:
-        options = GameOptions.parse_from_dict(request.values)
+        options = GameOptions.parse_from_dict(parse_to_bool_dict(request.values))
+        options_valid, error = options.is_valid()
+        if not options_valid:
+            return {
+                "error": error,
+            }, 400
+
         numbers, solution, time_taken = create_game(quantity, target, options)
         return {
             "numbers": numbers,

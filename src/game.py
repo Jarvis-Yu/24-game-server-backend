@@ -23,12 +23,19 @@ def create_game(
         seed: number | str | None = None,
         timeout: number | None = None,
 ) -> tuple[list[int], Expression, number]:
+    assert options.is_valid()[0]
     randomizer = _get_random(seed)
     start_time = time.time()
     while True:
         numbers = [randomizer.randint(1, 10) for _ in range(quantity)]
-        if (solution := find_one_solution(numbers, target, options)) is not None:
-            return numbers, solution, time.time() - start_time
+        if options.float_only():
+            int_solution = find_one_solution(numbers, target, options.as_integer_only())
+            float_solution = find_one_solution(numbers, target, options)
+            if int_solution is None and float_solution is not None:
+                return numbers, float_solution, time.time() - start_time
+        else:
+            if (solution := find_one_solution(numbers, target, options)) is not None:
+                return numbers, solution, time.time() - start_time
         if timeout is not None and time.time() - start_time > timeout:
             raise TimeoutError("Timeout reached")
 

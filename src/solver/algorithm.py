@@ -53,6 +53,9 @@ def all_results(numbers: list[number], options: GameOptions) -> dict[number, Exp
             for number in numbers
         }
 
+    if not (options.integer_solvable or options.float_solvable):
+        return {number: NumberExpression(number) for number in numbers}
+
     empty_vector = NumberCombinationVector.init(numbers)
     total_vector = empty_vector.add_numbers(numbers)
     memo: dict[int, dict[NumberCombinationVector, dict[number, Expression]]] = defaultdict(lambda: defaultdict(dict))
@@ -75,7 +78,7 @@ def all_results(numbers: list[number], options: GameOptions) -> dict[number, Exp
                     continue
                 combined_total_count = combined_combination.total_count()
                 combined_results = memo[combined_total_count][combined_combination]
-                _binary_operation(focused_results, other_results, combined_results, options.integer_only)
+                _binary_operation(focused_results, other_results, combined_results, options.integer_only())
 
     if options.must_use_all:
         return {
@@ -98,12 +101,19 @@ def find_solution_for_target(
 ) -> Expression | None:
     total_count = len(numbers)
     if total_count == 0:
-        return False
+        return None
     elif total_count == 1:
-        return numbers[0] == target
+        return (
+            NumberExpression(numbers[0])
+            if numbers[0] == target
+            else None
+        )
 
     if not options.must_use_all and target in numbers:
-        return True
+        return NumberExpression(target)
+
+    if not (options.integer_solvable or options.float_solvable):
+        return None
 
     empty_vector = NumberCombinationVector.init(numbers)
     total_vector = empty_vector.add_numbers(numbers)
@@ -127,14 +137,14 @@ def find_solution_for_target(
                     continue
                 combined_total_count = combined_combination.total_count()
                 combined_results = memo[combined_total_count][combined_combination]
-                _binary_operation(focused_results, other_results, combined_results, options.integer_only)
+                _binary_operation(focused_results, other_results, combined_results, options.integer_only())
                 if (
                         (not options.must_use_all or combined_total_count == total_count)
                         and target in combined_results
                 ):
                     return combined_results[target]
 
-    if not options.integer_only:
+    if not options.integer_solvable:
         for comb_result_dict in memo[total_count].values():
             for result, expression in comb_result_dict.items():
                 if abs(result - target) < 1e-6:
@@ -144,7 +154,7 @@ def find_solution_for_target(
 
 if __name__ == "__main__":
     default_options = GameOptions()
-    float_allowed_options = GameOptions(integer_only=False)
+    float_allowed_options = GameOptions(integer_solvable=False)
     assert find_solution_for_target([2, 10, 2, 2], 24, default_options) is not None
     assert find_solution_for_target([1, 4, 7, 9], 24, default_options) is not None
     assert find_solution_for_target([11, 11, 11, 11], 24, default_options) is None
