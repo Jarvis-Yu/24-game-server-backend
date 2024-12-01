@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 import flask as flk
 
+from .utils.parse import parse_int
+
 from .utils.cipher import get_encryptor_decryptor
 from .utils.expression import Expression
 from .utils.game_options import GameOptions
@@ -59,7 +61,11 @@ class _App:
 
         @app.route(self.ROUTES.query_classic, methods=["GET", "POST"])
         def query_classic_game(target: int, numbers_in_path: str):
-            numbers = [int(number) for number in numbers_in_path[:-1].split("/")]
+            numbers = [
+                number
+                for number_str in numbers_in_path.split("/")
+                if (number := parse_int(number_str)) is not None
+            ]
             int_solution, int_time_taken = check_game(numbers, target, GameOptions())
             float_solution, float_time_taken = check_game(numbers, target, GameOptions(integer_only=False))
             integer_feasible = int_solution is not None
