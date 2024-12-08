@@ -29,7 +29,7 @@ def create_game(
     while True:
         numbers = [randomizer.randint(1, 10) for _ in range(quantity)]
         if options.float_only():
-            int_solution = find_one_solution(numbers, target, options.as_integer_only())
+            int_solution = find_one_solution(numbers, target, options.as_integer_solvable())
             float_solution = find_one_solution(numbers, target, options)
             if int_solution is None and float_solution is not None:
                 return numbers, float_solution, time.time() - start_time

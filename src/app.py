@@ -52,7 +52,7 @@ class _App:
         @app.route(self.ROUTES.game_of_the_day, methods=["GET", "POST"])
         def game_of_the_day():
             seed = datetime.date.today().isoformat() + self.SALT_TODAY
-            options = GameOptions(integer_solvable=False)
+            options = GameOptions.from_solvable()
             numbers, solution, time_taken = create_game(4, 24, options, seed)
             return {
                 "numbers": numbers,
@@ -66,8 +66,8 @@ class _App:
                 for number_str in numbers_in_path.split("/")
                 if (number := parse_int(number_str)) is not None
             ]
-            int_solution, int_time_taken = check_game(numbers, target, GameOptions())
-            float_solution, float_time_taken = check_game(numbers, target, GameOptions(integer_solvable=False))
+            int_solution, int_time_taken = check_game(numbers, target, GameOptions.from_integer_solvable())
+            float_solution, float_time_taken = check_game(numbers, target, GameOptions.from_float_only())
             integer_feasible = int_solution is not None
             return {
                 "numbers": numbers,
