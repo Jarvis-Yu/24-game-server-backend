@@ -1,6 +1,5 @@
-from base64 import urlsafe_b64encode, urlsafe_b64decode
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 from typing import Callable
-
 
 __all__ = ["get_encryptor_decryptor"]
 

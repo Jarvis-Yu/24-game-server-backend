@@ -1,16 +1,20 @@
 from __future__ import annotations
+
 import datetime
 import os
 from dataclasses import dataclass
 
 import flask as flk
 
-from .utils.parse import parse_int, parse_to_bool_dict
+from .models import GameModel
 
+from .game import check_game, create_game
+from .tracker.options import TrackerOptions
+from .tracker.tracker import Tracker
 from .utils.cipher import get_encryptor_decryptor
 from .utils.expression import Expression
 from .utils.game_options import GameOptions
-from .game import check_game, create_game
+from .utils.parse import parse_int, parse_to_bool_dict
 
 
 __all__ = ["create_app"]
@@ -30,6 +34,7 @@ class _App:
 
     def __init__(self, app: flk.Flask):
         self.app = app
+        self.tracker = Tracker(TrackerOptions())
 
         self.SALT_TODAY = os.environ.get("SALT_TODAY", "09sdfjgn1o3iua0s9dfij12k34j")
 
@@ -95,7 +100,7 @@ class _App:
                 },
             }, 404
 
-    def create_game(self, request: flk.Request, quantity: int, target: int) -> dict:
+    def create_game(self, request: flk.Request, quantity: int, target: int) -> dict | tuple[dict, int]:
         options = GameOptions.parse_from_dict(parse_to_bool_dict(request.values))
         options_valid, error = options.is_valid()
         if not options_valid:
@@ -104,6 +109,13 @@ class _App:
             }, 400
 
         numbers, solution, time_taken = create_game(quantity, target, options)
+        game = GameModel(
+            game_options=options,
+            numbers=numbers,
+            solution=solution,
+            target=target,
+        )
+        self.tracker.record(game, time_taken, request)
         return {
             "numbers": numbers,
             "target": target,
