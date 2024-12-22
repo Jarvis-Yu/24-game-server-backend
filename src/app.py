@@ -38,7 +38,6 @@ class _App:
         @app.route("/favicon.ico", methods=["GET"])
         def favicon():
             assets_path = os.path.join(app.root_path, "assets")
-            print(assets_path)
             return flk.send_from_directory(assets_path, "favicon.ico")
 
         @app.route(self.ROUTES.classic_24, methods=["GET", "POST"])

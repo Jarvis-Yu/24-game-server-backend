@@ -47,9 +47,11 @@ class GameOptions:
         return cls(allow_integer=True, allow_float_only=True)
 
     @classmethod
-    def parse_from_dict(cls, data: dict[str, bool]) -> Self:
+    def parse_from_dict(cls, data: dict[str, bool], default_options : Self | None = None) -> Self:
+        if default_options is None:
+            default_options = cls()
         return GameOptions(
-            allow_integer=data.get("allow_integer", True),
-            allow_float_only=data.get("allow_float_only", True),
-            must_use_all=data.get("must_use_all", True),
+            allow_integer=data.get("allow_integer", default_options.allow_integer),
+            allow_float_only=data.get("allow_float_only", default_options.allow_float_only),
+            must_use_all=data.get("must_use_all", default_options.must_use_all),
         )
